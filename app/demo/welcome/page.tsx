@@ -1,0 +1,5 @@
+import { DemoShell } from '@/components/demo-shell';
+
+export default function WelcomePage() {
+  return <DemoShell eyebrow="Split start page" title="Browse two pages without losing either one."><p className="text-base">Split keeps two independent browser panes visible. Use the address bar above this page, then open a different resource in the other pane.</p><div className="mt-8 grid gap-3 sm:grid-cols-2"><section className="rounded-2xl border border-[#c9d3df] bg-[#f8fafc] p-5"><strong className="text-[#172033]">Independent navigation</strong><p className="mt-2">Each pane owns its URL and back/forward history.</p></section><section className="rounded-2xl border border-[#c9d3df] bg-[#f8fafc] p-5"><strong className="text-[#172033]">Saved workspaces</strong><p className="mt-2">T1–T4 restore both URLs and the divider position.</p></section></div><p className="mt-8 rounded-xl bg-[#e9f5f6] p-4 text-[#14747c]"><strong>Try it:</strong> drag the divider, switch to T2, then return to T1.</p></DemoShell>;
+}

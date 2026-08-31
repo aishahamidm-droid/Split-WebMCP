@@ -1,0 +1,5 @@
+import { DemoShell } from '@/components/demo-shell';
+
+export default function WebMcpGuidePage() {
+  return <DemoShell eyebrow="New hackathon extension" title="The same Split workspace is now visible to an agent." tone="blue"><p className="text-base">A WebMCP-capable external agent can discover structured Split tools instead of guessing at buttons. Tool calls update the same T1–T4 state the human sees.</p><ol className="mt-8 space-y-3">{['Agent reads the visible left and right panes.', 'Agent opens a safe URL in a selected pane.', 'Split updates immediately and records agent provenance.', 'Human continues browsing, notes, or bookmarking.'].map((step, index) => <li key={step} className="flex gap-3 rounded-xl border border-[#c9d3df] p-4"><span className="grid size-7 shrink-0 place-items-center rounded-lg bg-[#285d9f] text-xs font-bold text-white">{index + 1}</span><span>{step}</span></li>)}</ol><p className="mt-8 text-xs">WebMCP is feature-detected. Without it, Split remains a complete human-controlled dual browser.</p></DemoShell>;
+}
