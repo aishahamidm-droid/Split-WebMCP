@@ -45,6 +45,9 @@ WebMCP references used by the implementation:
 - Same-origin local demo pages rendered as real pages inside sandboxed iframes.
 - Honest external-resource fallback when reliable third-party embedding cannot be guaranteed; no CSP or X-Frame-Options bypass.
 - Draggable quick-tools control for notes, bookmarks, optional comparisons, and human/agent activity.
+- Original Split palette family: Ocean, Forest, Graphite, Rose, Indigo, Ruby, Amber, Mint, and Blue, with persisted Light/Dark mode across the full workspace chrome.
+- Original Watch shortcuts for Netflix, Prime Video, Crunchyroll, and YouTube with pane choice.
+- Shared Notepad can remain in Quick Tools or open inside either browser pane; quick-tools position also persists.
 - Visible pane-aware history with direct history jumps and Split-owned history clearing.
 - Independent pane text zoom and configurable homepages.
 - Web-safe copy/share, browser-managed downloads, and permission-based workspace capture.
