@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { activeTab, activity, cloneInitialState, loadState, saveState, splitReducer, STORAGE_KEY } from '../lib/split-state.ts';
+import { activeTab, activity, cloneInitialState, loadState, resolvePalette, saveState, splitReducer, STORAGE_KEY } from '../lib/split-state.ts';
 
 void test('navigation updates only the requested pane and preserves history', () => {
   const initial = cloneInitialState();
@@ -62,4 +62,19 @@ void test('private Split sessions are not persisted as browser-level incognito',
   const restored = loadState(storage);
   assert.equal(restored.tabs[0].privateMode, false);
   assert.equal(restored.tabs[0].panes.left.url, '/demo/welcome');
+});
+
+void test('original Split palette, dark mode, and quick-tool position persist', () => {
+  const memory = new Map<string, string>();
+  const storage = { getItem: (key: string) => memory.get(key) ?? null, setItem: (key: string, value: string) => { memory.set(key, value); } };
+  let state = cloneInitialState();
+  state = splitReducer(state, { type: 'set-appearance', paletteName: 'Rose', darkMode: true, activity: activity('human', 'Appearance', 'Rose dark') });
+  state = splitReducer(state, { type: 'set-quick-tool-position', right: 84, bottom: 96 });
+  assert.equal(resolvePalette('Rose', false).primary, '#af4863');
+  assert.equal(resolvePalette('Rose', true).background, '#121820');
+  assert.equal(saveState(storage, state), true);
+  const restored = loadState(storage);
+  assert.equal(restored.appearance.paletteName, 'Rose');
+  assert.equal(restored.appearance.darkMode, true);
+  assert.deepEqual(restored.appearance.quickToolPosition, { right: 84, bottom: 96 });
 });
