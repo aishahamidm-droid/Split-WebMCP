@@ -45,6 +45,10 @@ WebMCP references used by the implementation:
 - Same-origin local demo pages rendered as real pages inside sandboxed iframes.
 - Honest external-resource fallback when reliable third-party embedding cannot be guaranteed; no CSP or X-Frame-Options bypass.
 - Draggable quick-tools control for notes, bookmarks, optional comparisons, and human/agent activity.
+- Visible pane-aware history with direct history jumps and Split-owned history clearing.
+- Independent pane text zoom and configurable homepages.
+- Web-safe copy/share, browser-managed downloads, and permission-based workspace capture.
+- Honest per-workspace Private Split sessions that suppress Split persistence without claiming browser incognito.
 - Local browser persistence with a reset control and safe malformed-state fallback.
 - WebMCP feature detection; the complete human interface works without WebMCP.
 - Responsive, keyboard-accessible controls, labeled panes, useful blank states, and inline validation errors.
@@ -76,7 +80,9 @@ All tools are registered with `document.modelContext.registerTool(tool, { signal
 | `get_workspace` | Read the complete Split state | none | Read-only structured context |
 | `get_panes` | Read both currently visible browser panes | none | Read-only pane URLs, titles, history, ratio |
 | `get_tabs` | Read T1–T4 paired workspaces | none | Read-only tab/pane state |
+| `switch_workspace` | Switch the visible T1–T4 workspace | `tabId` | Both human-visible panes and saved ratio change together |
 | `open_resource` | Open a safe URL or approved demo page | `url`, `pane`, optional `tabId`, `title` | Navigates that human-visible pane and records agent activity |
+| `configure_pane` | Configure pane zoom/homepage | `pane`, optional `tabId`, `textScale`, `homepage` | Updates the same visible persistent pane preferences |
 | `get_notes` | Read shared notes | none | Read-only notes with provenance |
 | `add_note` | Add a shared note | `body`, optional `title` | Note appears in quick tools as an agent note |
 | `get_bookmarks` | Read saved resources | none | Read-only bookmarks |
@@ -118,7 +124,7 @@ In the browser console, feature detection is:
 typeof document.modelContext?.registerTool === 'function'
 ```
 
-The header should report **9 WebMCP tools**. A capable external agent should discover the tool descriptions and JSON Schemas. The current draft also defines `getTools()` and `executeTool()` for supported in-page testing contexts; browser-provided agent tooling may expose its own inspector.
+The header should report **11 WebMCP tools**. A capable external agent should discover the tool descriptions and JSON Schemas. The current draft also defines `getTools()` and `executeTool()` for supported in-page testing contexts; browser-provided agent tooling may expose its own inspector.
 
 ## Demo workflow
 
@@ -159,7 +165,9 @@ npm run build
 npm audit
 ```
 
-Automated tests cover pane navigation/history isolation, T1–T4 split persistence, notes/bookmark provenance, persistence fallback, URL/search validation, unsafe schemes, malformed comparison input, WebMCP feature fallback, registration lifecycle, exact tool names, and agent actions changing the shared visible state.
+Automated tests cover pane navigation/history isolation, history jumps, T1–T4 split persistence, private-session persistence suppression, pane preferences, notes/bookmark provenance, persistence fallback, URL/search validation, unsafe schemes, malformed comparison input, WebMCP feature fallback, registration lifecycle, exact tool names, and agent actions changing the shared visible state.
+
+See the [full original Split feature-parity audit](docs/FEATURE-PARITY.md) for the A/B/C/D classification and the exact web-platform adaptations.
 
 Actual local results are recorded in the final development report; this README does not claim checks that have not run.
 
@@ -175,7 +183,7 @@ See [Original Split and new-work disclosure](docs/ORIGINAL-SPLIT-DISCLOSURE.md) 
 
 - The separate Split WebMCP web application and responsive browser-like interface.
 - A web-native T1–T4 state model with two panes, per-pane history, per-tab split ratios, persistence, and deterministic demo pages.
-- Real `document.modelContext.registerTool(...)` integration with nine structured capabilities.
+- Real `document.modelContext.registerTool(...)` integration with eleven structured capabilities.
 - Shared human/WebMCP reducer state and visible agent provenance.
 - Web-specific URL/schema validation, iframe/fallback policy, security headers, and feature detection.
 - WebMCP-focused automated tests, documentation, social preview, open-source preparation, and deployment configuration.
@@ -193,7 +201,7 @@ The project is compatible with the generated Sites/Vinext Cloudflare Worker conf
 1. Set `NEXT_PUBLIC_SITE_URL` to the trusted final HTTPS origin so social metadata resolves correctly.
 2. Re-run all tests, type checks, lint, production build, and dependency audit.
 3. Verify the security headers at the live origin.
-4. Test all nine registrations and at least one mutation in a real WebMCP-enabled browser.
+4. Test all eleven registrations and at least one mutation in a real WebMCP-enabled browser.
 5. Publish only after the project owner explicitly approves GitHub creation and deployment.
 
 No remote, deployment, or public resource is created by the local setup.
