@@ -1,6 +1,6 @@
 # Actual SplitLauncher2 feature-parity audit
 
-This inventory is based on a read-only inspection of the currently provided Android checkout at `D:\AndroidStudioProjects\SplitLauncher2`, including its manifest, portrait/landscape layouts, `DualBrowserActivity`, dormant `MainActivity`, resources, dialogs, quick menu, WebView configuration, and preference writes. No Android file was modified or copied.
+This inventory is based on a read-only inspection of the separately provided Android checkout, including its manifest, portrait/landscape layouts, `DualBrowserActivity`, dormant `MainActivity`, resources, dialogs, quick menu, WebView configuration, and preference writes. No Android file was modified or copied.
 
 ## Reachable screens and controls
 

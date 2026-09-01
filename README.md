@@ -119,7 +119,12 @@ When `document.modelContext` is unavailable, the header reports **Human mode**. 
 
 ## Test with WebMCP
 
-Use a browser/build with WebMCP enabled and open Split at a secure origin (or the supported local development origin).
+The judge or user supplies the compatible external agent environment; Split does not host an agent and is not tied to the project owner's Codex account. Current challenge-supported testing options are:
+
+- Open the deployed Split URL in the ChatGPT in-app browser, which the challenge identifies as supporting WebMCP out of the box.
+- In a current Chrome build, enable `chrome://flags/#enable-webmcp-testing`, relaunch Chrome, and open Split.
+
+For local development, use `http://localhost:3000`. For judging, use the final public HTTPS URL. WebMCP support is still experimental, so do not assume an arbitrary browser or AI client can discover these tools.
 
 In the browser console, feature detection is:
 
@@ -128,6 +133,21 @@ typeof document.modelContext?.registerTool === 'function'
 ```
 
 The header should report **11 WebMCP tools**. A capable external agent should discover the tool descriptions and JSON Schemas. The current draft also defines `getTools()` and `executeTool()` for supported in-page testing contexts; browser-provided agent tooling may expose its own inspector.
+
+The imperative registration is implemented in [`lib/webmcp.ts`](lib/webmcp.ts), where each definition is passed to `document.modelContext.registerTool(...)` through the supplied model context. [`components/split-app.tsx`](components/split-app.tsx) connects that registration to the same reducer dispatch used by human UI actions.
+
+## Real WebMCP verification evidence
+
+The final local integration check used the **Codex desktop in-app browser agent** against `http://localhost:3000`; it was not a mocked handler test or an in-product agent simulation.
+
+1. The external browser agent discovered all eleven registered Split tools.
+2. It called `get_workspace` and read the active dual-pane workspace.
+3. It called `switch_workspace` with `tab2`; the human-visible UI changed to T2, including T2's two pane resources and saved split ratio.
+4. It called `add_note`; the requested note appeared in Split's Notes panel with **Agent** provenance.
+5. Normal human UI interaction then switched T2 → T1 → T2.
+6. A subsequent external `get_workspace` call observed the retained agent note, active T2 state, and the new human-originated activity entries.
+
+This proves the tested collaboration chain: external discovery → structured read → structured mutation → visible Split update → continued human interaction on the same authoritative workspace. It does not claim that every browser or agent currently supports WebMCP.
 
 ## Demo workflow
 
@@ -178,7 +198,7 @@ Actual local results are recorded in the final development report; this README d
 
 The original Split concept and Android application existed before the WebMCP Challenge. Its dual-browser concept, two-pane browsing, T1–T4 saved paired workspaces, URL navigation, independent back/forward controls, draggable resizing, portrait/landscape layouts, built-in notes, quick tools, palettes, dark mode, and other Android behavior are pre-existing work.
 
-The Android repository at `D:\AndroidStudioProjects\SplitLauncher2` was inspected only as a read-only product reference. Its source was not copied into this project, modified, formatted, upgraded, committed, or included here.
+The separate local Android checkout was inspected only as a read-only product reference. Its source was not copied into this project, modified, formatted, upgraded, committed, or included here.
 
 See [Original Split and new-work disclosure](docs/ORIGINAL-SPLIT-DISCLOSURE.md) for the explicit before/after boundary.
 

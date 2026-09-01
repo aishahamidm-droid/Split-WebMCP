@@ -4,21 +4,13 @@
 
 Split already existed as an Android dual-browser productivity application. The product concept and Android implementation are pre-existing work, including the core experience of keeping two web pages visible, resizing the split, switching orientation, retaining paired T1–T4 workspaces, navigating each pane, and using notes and quick tools.
 
-The original Android application remains in its separate repository:
-
-```text
-D:\AndroidStudioProjects\SplitLauncher2
-```
+The original Android application remains in a separate local repository outside this web project.
 
 That repository was used only as a **read-only product reference**. No file in it was edited, formatted, upgraded, renamed, moved, deleted, committed, or copied wholesale into Split WebMCP.
 
 ## New during the WebMCP Challenge
 
-Split WebMCP is a separate, independently implemented web project:
-
-```text
-D:\Split-WebMCP
-```
+Split WebMCP is a separate, independently implemented web project and Git history.
 
 New challenge work consists of:
 
