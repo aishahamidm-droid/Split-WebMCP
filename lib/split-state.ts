@@ -7,6 +7,8 @@ export interface PaneState {
   title: string;
   history: string[];
   historyIndex: number;
+  textScale: number;
+  homepage: string;
 }
 
 export interface SplitTab {
@@ -14,6 +16,7 @@ export interface SplitTab {
   label: 'T1' | 'T2' | 'T3' | 'T4';
   panes: Record<PaneId, PaneState>;
   splitRatio: number;
+  privateMode: boolean;
 }
 
 export interface Note { id: string; title: string; body: string; actor: Actor; createdAt: string }
@@ -34,17 +37,17 @@ export interface SplitState {
 }
 
 const seededAt = '2026-08-31T09:00:00.000Z';
-const pane = (url: string, title: string): PaneState => ({ url, title, history: [url], historyIndex: 0 });
+const pane = (url: string, title: string): PaneState => ({ url, title, history: [url], historyIndex: 0, textScale: 100, homepage: '/demo/welcome' });
 
 export const INITIAL_STATE: SplitState = {
   version: 1,
   activeTabId: 'tab1',
   activePane: 'left',
   tabs: [
-    { id: 'tab1', label: 'T1', splitRatio: 50, panes: { left: pane('/demo/welcome', 'Welcome to Split'), right: pane('/demo/webmcp-guide', 'Split + WebMCP') } },
-    { id: 'tab2', label: 'T2', splitRatio: 44, panes: { left: pane('/demo/focus', 'Focus article'), right: pane('/demo/reference', 'Reference sheet') } },
-    { id: 'tab3', label: 'T3', splitRatio: 50, panes: { left: pane('about:blank', 'New tab'), right: pane('about:blank', 'New tab') } },
-    { id: 'tab4', label: 'T4', splitRatio: 50, panes: { left: pane('about:blank', 'New tab'), right: pane('about:blank', 'New tab') } },
+    { id: 'tab1', label: 'T1', splitRatio: 50, privateMode: false, panes: { left: pane('/demo/welcome', 'Welcome to Split'), right: pane('/demo/webmcp-guide', 'Split + WebMCP') } },
+    { id: 'tab2', label: 'T2', splitRatio: 44, privateMode: false, panes: { left: pane('/demo/focus', 'Focus article'), right: pane('/demo/reference', 'Reference sheet') } },
+    { id: 'tab3', label: 'T3', splitRatio: 50, privateMode: false, panes: { left: pane('about:blank', 'New tab'), right: pane('about:blank', 'New tab') } },
+    { id: 'tab4', label: 'T4', splitRatio: 50, privateMode: false, panes: { left: pane('about:blank', 'New tab'), right: pane('about:blank', 'New tab') } },
   ],
   notes: [{ id: 'note-welcome', title: 'Welcome', body: 'Your notes stay available while both browser panes remain open.', actor: 'human', createdAt: seededAt }],
   bookmarks: [],
@@ -58,7 +61,11 @@ export type SplitAction =
   | { type: 'set-active-pane'; pane: PaneId }
   | { type: 'navigate'; tabId: TabId; pane: PaneId; url: string; title: string; activity: ActivityItem }
   | { type: 'history-step'; tabId: TabId; pane: PaneId; delta: -1 | 1; activity?: ActivityItem }
+  | { type: 'history-jump'; tabId: TabId; pane: PaneId; index: number; activity?: ActivityItem }
+  | { type: 'clear-history'; tabId: TabId; pane: PaneId; activity: ActivityItem }
   | { type: 'set-split-ratio'; tabId: TabId; ratio: number }
+  | { type: 'set-pane-preferences'; tabId: TabId; pane: PaneId; textScale?: number; homepage?: string; activity?: ActivityItem }
+  | { type: 'set-private-mode'; tabId: TabId; enabled: boolean; activity: ActivityItem }
   | { type: 'add-note'; note: Note; activity: ActivityItem }
   | { type: 'add-bookmark'; bookmark: Bookmark; activity: ActivityItem }
   | { type: 'add-comparison'; comparison: Comparison; activity: ActivityItem };
@@ -78,7 +85,7 @@ export function splitReducer(state: SplitState, action: SplitAction): SplitState
         tabs: updateTab(state, action.tabId, (tab) => {
           const current = tab.panes[action.pane];
           const history = [...current.history.slice(0, current.historyIndex + 1), action.url].slice(-40);
-          return { ...tab, panes: { ...tab.panes, [action.pane]: { url: action.url, title: action.title, history, historyIndex: history.length - 1 } } };
+          return { ...tab, panes: { ...tab.panes, [action.pane]: { ...current, url: action.url, title: action.title, history, historyIndex: history.length - 1 } } };
         }),
         activity: [action.activity, ...state.activity].slice(0, 80),
       };
@@ -94,7 +101,33 @@ export function splitReducer(state: SplitState, action: SplitAction): SplitState
         }),
         activity: action.activity ? [action.activity, ...state.activity].slice(0, 80) : state.activity,
       };
+    case 'history-jump':
+      return {
+        ...state,
+        activePane: action.pane,
+        tabs: updateTab(state, action.tabId, (tab) => {
+          const current = tab.panes[action.pane]; const historyIndex = Math.max(0, Math.min(current.history.length - 1, action.index)); const url = current.history[historyIndex];
+          return { ...tab, panes: { ...tab.panes, [action.pane]: { ...current, url, title: titleFromUrl(url), historyIndex } } };
+        }),
+        activity: action.activity ? [action.activity, ...state.activity].slice(0, 80) : state.activity,
+      };
+    case 'clear-history':
+      return {
+        ...state,
+        tabs: updateTab(state, action.tabId, (tab) => {
+          const current = tab.panes[action.pane];
+          return { ...tab, panes: { ...tab.panes, [action.pane]: { ...current, history: [current.url], historyIndex: 0 } } };
+        }),
+        activity: [action.activity, ...state.activity].slice(0, 80),
+      };
     case 'set-split-ratio': return { ...state, tabs: updateTab(state, action.tabId, (tab) => ({ ...tab, splitRatio: Math.max(20, Math.min(80, action.ratio)) })) };
+    case 'set-pane-preferences':
+      return {
+        ...state,
+        tabs: updateTab(state, action.tabId, (tab) => ({ ...tab, panes: { ...tab.panes, [action.pane]: { ...tab.panes[action.pane], ...(action.textScale == null ? {} : { textScale: Math.max(75, Math.min(150, action.textScale)) }), ...(action.homepage == null ? {} : { homepage: action.homepage }) } } })),
+        activity: action.activity ? [action.activity, ...state.activity].slice(0, 80) : state.activity,
+      };
+    case 'set-private-mode': return { ...state, tabs: updateTab(state, action.tabId, (tab) => ({ ...tab, privateMode: action.enabled })), activity: [action.activity, ...state.activity].slice(0, 80) };
     case 'add-note': return { ...state, notes: [action.note, ...state.notes], activity: [action.activity, ...state.activity].slice(0, 80) };
     case 'add-bookmark': return { ...state, bookmarks: [action.bookmark, ...state.bookmarks], activity: [action.activity, ...state.activity].slice(0, 80) };
     case 'add-comparison': return { ...state, comparisons: [action.comparison, ...state.comparisons], activity: [action.activity, ...state.activity].slice(0, 80) };
@@ -128,14 +161,30 @@ export function makeId(prefix: string): string {
 export function activity(actor: Actor, action: string, detail: string, createdAt = new Date().toISOString()): ActivityItem { return { id: makeId('activity'), actor, action, detail, createdAt } }
 
 export const STORAGE_KEY = 'split-webmcp.workspace.v1';
+function completeState(value: SplitState): SplitState {
+  return {
+    ...value,
+    tabs: value.tabs.map((tab, index) => ({
+      ...tab,
+      privateMode: false,
+      panes: {
+        left: { ...tab.panes.left, textScale: tab.panes.left.textScale ?? 100, homepage: tab.panes.left.homepage ?? INITIAL_STATE.tabs[index].panes.left.homepage },
+        right: { ...tab.panes.right, textScale: tab.panes.right.textScale ?? 100, homepage: tab.panes.right.homepage ?? INITIAL_STATE.tabs[index].panes.right.homepage },
+      },
+    })),
+  };
+}
 export function loadState(storage: { getItem: (key: string) => string | null }): SplitState {
   try {
     const raw = storage.getItem(STORAGE_KEY); if (!raw) return cloneInitialState();
     const value = JSON.parse(raw) as Partial<SplitState>;
     if (value.version !== 1 || !Array.isArray(value.tabs) || value.tabs.length !== 4 || !value.activeTabId) return cloneInitialState();
-    return value as SplitState;
+    return completeState(value as SplitState);
   } catch { return cloneInitialState(); }
 }
 export function saveState(storage: { setItem: (key: string, value: string) => void }, state: SplitState): boolean {
-  try { storage.setItem(STORAGE_KEY, JSON.stringify(state)); return true; } catch { return false; }
+  try {
+    const persisted = { ...state, tabs: state.tabs.map((tab, index) => tab.privateMode ? cloneInitialState().tabs[index] : tab) };
+    storage.setItem(STORAGE_KEY, JSON.stringify(persisted)); return true;
+  } catch { return false; }
 }
