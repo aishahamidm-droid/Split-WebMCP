@@ -9,12 +9,12 @@ function harness() {
   return { tools, state: () => state };
 }
 
-void test('registers the coherent nine-tool Split surface with AbortSignal lifecycle', async () => {
+void test('registers the coherent eleven-tool Split surface with AbortSignal lifecycle', async () => {
   const seen: WebMcpTool[] = []; const signals: AbortSignal[] = [];
   const registration = await registerTools({ registerTool(tool, options) { seen.push(tool); if (options?.signal) signals.push(options.signal); } }, harness().tools);
   assert.equal(registration.available, true);
-  assert.equal(registration.registered.length, 9);
-  assert.deepEqual(registration.registered, ['get_workspace', 'get_panes', 'get_tabs', 'open_resource', 'get_notes', 'add_note', 'get_bookmarks', 'save_bookmark', 'create_comparison']);
+  assert.equal(registration.registered.length, 11);
+  assert.deepEqual(registration.registered, ['get_workspace', 'get_panes', 'get_tabs', 'switch_workspace', 'open_resource', 'configure_pane', 'get_notes', 'add_note', 'get_bookmarks', 'save_bookmark', 'create_comparison']);
   assert.ok(signals.every((signal) => !signal.aborted));
   registration.dispose();
   assert.ok(signals.every((signal) => signal.aborted));
@@ -42,6 +42,16 @@ void test('agent notes, bookmarks, and comparisons update shared state', async (
   assert.equal(app.state().notes[0].actor, 'agent');
   assert.equal(app.state().bookmarks[0].url, '/demo/welcome');
   assert.equal(app.state().comparisons[0].rows.length, 1);
+});
+
+void test('agent workspace switching and pane preferences update shared visible state', async () => {
+  const app = harness();
+  await app.tools.find((item) => item.name === 'switch_workspace')!.execute({ tabId: 'tab2' });
+  await app.tools.find((item) => item.name === 'configure_pane')!.execute({ tabId: 'tab2', pane: 'left', textScale: 125, homepage: 'https://example.com/' });
+  assert.equal(app.state().activeTabId, 'tab2');
+  assert.equal(app.state().tabs[1].panes.left.textScale, 125);
+  assert.equal(app.state().tabs[1].panes.left.homepage, 'https://example.com/');
+  assert.equal(app.state().activity[0].actor, 'agent');
 });
 
 void test('tool handlers reject malformed and unsafe arguments even outside browser schema validation', async () => {

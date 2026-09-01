@@ -39,3 +39,27 @@ void test('persistence round-trips and malformed data falls back safely', () => 
   memory.set(STORAGE_KEY, '{broken');
   assert.equal(loadState(storage).activeTabId, 'tab1');
 });
+
+void test('pane preferences and pane-aware history are independently controlled', () => {
+  let state = cloneInitialState();
+  state = splitReducer(state, { type: 'set-pane-preferences', tabId: 'tab1', pane: 'right', textScale: 130, homepage: 'https://example.com/' });
+  state = splitReducer(state, { type: 'navigate', tabId: 'tab1', pane: 'right', url: 'https://example.com/a', title: 'A', activity: activity('human', 'Navigated', 'A') });
+  state = splitReducer(state, { type: 'navigate', tabId: 'tab1', pane: 'right', url: 'https://example.com/b', title: 'B', activity: activity('human', 'Navigated', 'B') });
+  state = splitReducer(state, { type: 'history-jump', tabId: 'tab1', pane: 'right', index: 1 });
+  assert.equal(state.tabs[0].panes.right.textScale, 130);
+  assert.equal(state.tabs[0].panes.right.homepage, 'https://example.com/');
+  assert.equal(state.tabs[0].panes.right.url, 'https://example.com/a');
+  assert.equal(state.tabs[0].panes.left.textScale, 100);
+});
+
+void test('private Split sessions are not persisted as browser-level incognito', () => {
+  const memory = new Map<string, string>();
+  const storage = { getItem: (key: string) => memory.get(key) ?? null, setItem: (key: string, value: string) => { memory.set(key, value); } };
+  let state = cloneInitialState();
+  state = splitReducer(state, { type: 'set-private-mode', tabId: 'tab1', enabled: true, activity: activity('human', 'Private', 'T1') });
+  state = splitReducer(state, { type: 'navigate', tabId: 'tab1', pane: 'left', url: 'https://private.example/', title: 'Private', activity: activity('human', 'Navigated', 'Private') });
+  saveState(storage, state);
+  const restored = loadState(storage);
+  assert.equal(restored.tabs[0].privateMode, false);
+  assert.equal(restored.tabs[0].panes.left.url, '/demo/welcome');
+});
