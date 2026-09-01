@@ -133,10 +133,22 @@ body { font-family: "Segoe UI Variable", "Segoe UI", system-ui, sans-serif; }
 
 @layer components {
   .browser-control {
-    @apply grid size-7 shrink-0 place-items-center rounded-md bg-[#14747c] text-white transition hover:bg-[#105f66] disabled:cursor-not-allowed disabled:bg-[#d6dee7] disabled:text-[#8996a7];
+    @apply grid size-7 shrink-0 place-items-center rounded-md text-white transition disabled:cursor-not-allowed disabled:text-[#8996a7];
+    background: var(--split-primary, #14747c);
+  }
+  .browser-control:hover {
+    filter: brightness(.9);
+  }
+  .browser-control:disabled {
+    background: var(--split-inactive, #d6dee7);
   }
   .browser-control.secondary {
-    @apply bg-transparent text-[#14747c] hover:bg-[#e9f5f6];
+    @apply bg-transparent;
+    color: var(--split-primary, #14747c);
+  }
+  .browser-control.secondary:hover {
+    background: var(--split-inactive, #e9f5f6);
+    filter: none;
   }
   .browser-control svg {
     @apply size-3.5;
