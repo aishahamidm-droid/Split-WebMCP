@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? 'https://split-webmcp.aishahamidm.chatgpt.site'),
   title: 'Split WebMCP — Dual Browser',
   description: 'Split’s two-pane browser workspace, extended with real WebMCP tools for human and agent collaboration.',
   openGraph: {
